@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokémon 2048</title>
+    <script type="text/javascript" src="/eel.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Pokémon 2048</h1>
+        <div class="score">
+            <div class="score-box">
+                <div class="score-label">Score</div>
+                <div id="score-val">0</div>
+            </div>
+        </div>
+        <div id="game-board" class="game-board"></div>
+        <div class="instructions">
+            <p><strong>How to Play:</strong></p>
+            <p>Use <kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd> arrow keys to move tiles</p>
+            <p>Combine matching Pokémon to reach higher numbers!</p>
+            <p>Press <kbd>R</kbd> to restart the game</p>
+        </div>
+        <div id="overlay">
+            <h2>Game Over!</h2>
+            <button onclick="restartGame()">Try Again</button>
+        </div>
+    </div>
+    <script>
+        async function updateUI(state) {
+            const container = document.getElementById('game-board');
+            const scoreLabel = document.getElementById('score-val');
+            const overlay = document.getElementById('overlay');
+
+            // Clear the game board
+            container.innerHTML = '';
+
+            // Create the grid
+            for (let r = 0; r < 4; r++) {
+                const row = document.createElement('div');
+                row.className = 'grid-row';
+                for (let c = 0; c < 4; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'grid-cell';
+                    row.appendChild(cell);
+                }
+                container.appendChild(row);
+            }
+
+            scoreLabel.innerText = state.score;
+
+            // Add tiles
+            state.matrix.forEach((row, r) => {
+                row.forEach((imagePath, c) => {
+                    if (imagePath) {
+                        const tile = document.createElement('div');
+                        tile.className = 'tile';
+                        tile.style.top = `${15 + r * 110}px`;
+                        tile.style.left = `${15 + c * 110}px`;
+                        tile.innerHTML = `<img src="${imagePath}">`;
+                        container.appendChild(tile);
+                    }
+                });
+            });
+
+            overlay.style.display = state.gameOver ? 'flex' : 'none';
+        }
+
+        window.addEventListener('keydown', async (e) => {
+            if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
+                e.preventDefault();
+                let newState = await eel.handle_move(e.key)();
+                updateUI(newState);
+            }
+        });
+
+        async function restartGame() {
+            let state = await eel.restart()();
+            updateUI(state);
+        }
+
+        async function init() {
+            let initialState = await eel.get_game_state()();
+            updateUI(initialState);
+        }
+        init();
+    </script>
